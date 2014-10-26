@@ -1,8 +1,8 @@
 angular
   .module('app', [
     'ui.router',
-    'app.dash',
-    'app.upload'
+    'app.upload',
+    'app.graph'
   ])
 
   .config(function($stateProvider, $urlRouterProvider, $locationProvider) {
@@ -21,15 +21,15 @@ angular
             controller: 'UploadCtrl'
           },
           'balanceGraph@app': { 
-            templateUrl: 'js/dash/balanceGraph/balanceGraph.html',
+            templateUrl: 'js/graph/balanceGraph/balanceGraph.html',
             controller: 'BalanceGraphCtrl'
           },
           'totalGraph@app': { 
-            templateUrl: 'js/dash/totalGraph/totalGraph.html',
+            templateUrl: 'js/graph/totalGraph/totalGraph.html',
             controller: 'TotalGraphCtrl'
           },
           'timeGraph@app': { 
-            templateUrl: 'js/dash/timeGraph/timeGraph.html',
+            templateUrl: 'js/graph/timeGraph/timeGraph.html',
             controller: 'TimeGraphCtrl'
           }
         }

@@ -1,5 +1,5 @@
 angular
-  .module('app.dash', [
+  .module('app.graph', [
     'ui.router',
     'nvd3'
   ]);

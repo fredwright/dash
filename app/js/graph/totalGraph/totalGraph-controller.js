@@ -1,11 +1,11 @@
-angular.module('app.dash').controller('TotalGraphCtrl', function($scope, TotalGraphService){
+angular.module('app.graph').controller('TotalGraphCtrl', function($scope, GraphService){
 
   // DATA
   
-  TotalGraphService.getIncoming().success(function(data) {
+  GraphService.getIncomingTotalData().success(function(data) {
     $scope.incomingData = data;
   });
-  TotalGraphService.getOutgoing().success(function(data) {
+  GraphService.getOutgoingTotalData().success(function(data) {
     $scope.outgoingData = data;
   });
 

@@ -1,7 +1,7 @@
-node_modules/
-client/bower_components
+node_modules
+app/bower_components
 
-*.csv
+csv
 
 npm-debug.log
 .DS_Store

@@ -1,8 +1,8 @@
-angular.module('app.dash').controller('BalanceGraphCtrl', function($scope, BalanceGraphService){
+angular.module('app.graph').controller('BalanceGraphCtrl', function($scope, GraphService){
 
   // DATA
 
-  BalanceGraphService.get().success(function(data) {
+  GraphService.getBalanceGraphData().success(function(data) {
     $scope.data = data;
   });
     

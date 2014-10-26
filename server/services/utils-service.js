@@ -1,74 +1,91 @@
 'use strict';
 
-var _ = require('lodash');
+var _ = require('lodash'),
+    moment = require('moment'),
+    R = require('ramda');
 
 // EXPORTS
 
-module.exports.dataTransform = dataTransform;
+module.exports.transformRaw = transformRaw;
 
-// EXPORTED FUNCTIONS
+module.exports.keyValueWrapper = keyValueWrapper;
 
-function dataTransform(entries) {
-  // get total amount spent by date
-  var amountsByDate = {};
-  _.each(entries, function(entry, i) {
-    var date = entry.date;
-    var amount = entry.amount;
+module.exports.sortByFirst = sortByFirst;
 
-    // update total for each entry by date
-    var current = amountsByDate[date] || 0;
-    amountsByDate[date] = current + amount;
-  });
+module.exports.sortByDate = sortByDate;
+module.exports.groupByDate = groupByDate;
 
-  // save totals by date
-  var totalsArray = [];
-  var previousAmount = 0;
-  for (var date in amountsByDate) {
-    var amount = amountsByDate[date] ? amountsByDate[date]*-1 : 0;
-    amount = previousAmount + amount;
-    totalsArray.push([date, amount]);
-    previousAmount = amount;
-  }
+module.exports.sumAmounts = sumAmounts;
+module.exports.sumAmountsByDate = sumAmountsByDate;
+module.exports.cumulativeAmountsByDate = cumulativeAmountsByDate;
 
-  // add totals to return data array
-  var data = [{
-    "key": 'Total',
-    "values": totalsArray
-  }];
+module.exports.test = test;
 
-  // group amounts for each bank by date
-  amountsByDate = {};
-  _.each(entries, function(entry) {
-    var date = entry.date;
-    var bank = entry.bank;
-    var amount = parseFloat(entry.amount);
+// PRIVATE UTILS
 
-    // update total for each entry by bank and date
-    amountsByDate[bank] = amountsByDate[bank] || {};
-    var current = amountsByDate[bank][date] || 0;
-    amountsByDate[bank][date] = current + amount;
-  });
+var addProp = R.curry(function(prop, a, b) { return R.add(a, b[prop]); });
 
-  // save totals for each bank
-  for (var bank in amountsByDate) {
-    var dataForBank = [];
-    previousAmount = 0;
+var diffByProp = R.curry(function(prop, a, b) { return R.subtract(a[prop], b[prop]); });
+var diffByPropDesc = R.curry(function(prop, a, b) { return diffByProp(prop, b, a); });
 
-    for (date in amountsByDate[bank]) {
-      var bankAmount = amountsByDate[bank][date]*-1 || 0;
-      bankAmount = previousAmount + bankAmount;
-      dataForBank.push([date, bankAmount]);
-      previousAmount = bankAmount;
-    }
+var applyFnToEachProp = R.curry(function(fn, data) {
+  return R.reduce(function(acc, key) {
+    acc[key] = fn(data[key]);
+    return acc;
+  }, {}, R.keys(data));
+});
 
-    // add bank totals to return data array
-    data.push({
-      "key": bank,
-      "values": dataForBank
-    });
-  }
+var accumulateIndex = R.curry(function(index, data) {
+  var acc = 0;
+  return R.map(function(val) {
+    acc = addProp(index, acc, val);
+    val[index] = acc;
+    return val;
+  }, data);
+});
 
-  // console.log('bank = ');
-  // console.log(data);
-  return data;
+var objToArray = function(data) { return sortByFirst(R.toPairs(data)); };
+
+var sortBy = R.curry(function(prop, data) { return R.sort(diffByProp(prop), data); });
+var groupBy = R.curry(function(prop, data) { return R.groupBy(R.prop(prop), data); });
+var sumOf = R.curry(function(prop, data) { return R.reduce(addProp(prop), 0, data); });
+
+var sumAmountsForEachProp = applyFnToEachProp(sumAmounts);
+
+// EXPORTED UTILS
+
+function sortByFirst(data) { return sortBy(0, data); }
+
+function sortByDate(data) { return sortBy('date', data); }
+function groupByDate(data) { return groupBy('date', data); }
+
+function sumAmounts(data) { return sumOf('amount', data); }
+function sumAmountsByDate(data) { return objToArray(sumAmountsForEachProp(groupByDate(data))); }
+function cumulativeAmountsByDate(data) { return accumulateIndex(1, sumAmountsByDate(data)); }
+
+function keyValueWrapper(key, value) { return [{"key": key, "values": value}]; }
+
+
+
+function test(data) { 
+
+  return totalsOverTime(data);
+}
+
+// [{"key":"Total","values":[["1401231600000",1335.78],["1401145200000",2569.12]]}]
+var cumulativeTotalsOverTime = function(data) { return  keyValueWrapper('Total', cumulativeAmountsByDate(data)); };
+
+// [{"key":"Total","values":[["1401231600000",1335.78],["1401145200000",1233.34]]}]
+var totalsOverTime = function(data) { return  keyValueWrapper('Total', objToArray(sumAmountsByDate(data))); };
+
+// EXPORTED TRANSFORM
+
+function transformRaw(data) {
+  return {
+    createdTime: moment().toDate(),
+    bank: 'AMEX',
+    date: moment(data[0], 'DD/MM/YYYY').toDate().getTime(),
+    description: data[3].replace(/\s{2,}/g, ' '),
+    amount: parseFloat(data[2])
+  };
 }

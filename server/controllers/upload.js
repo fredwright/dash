@@ -2,11 +2,10 @@
 
 var route = require('koa-route'),
     parse = require('co-body'),
-    _ = require('lodash'),
     fs = require('fs'),
     csv = require('fast-csv'),
-    moment = require('moment'),
-    dataService = require('../services/data-service');
+    dataService = require('../services/data-service'),
+    utils = require('../services/utils-service');
 
 // ROUTES
 
@@ -41,27 +40,17 @@ function *clearData() {
 function parseCsv(filename) {
   return function(callback) {
     // get test file
-    var stream = fs.createReadStream(filename+".csv");
+    var stream = fs.createReadStream("csv/"+filename+".csv");
     var data = [];
     csv
       .fromStream(stream)
       .on("record", function(newData){
 
         // transform data
-        data.push(transform(newData));
+        data.push(utils.transformRaw(newData));
       })
       .on("end", function(){
         callback(/* error: */ null, data);
      });
-  };
-}
-
-function transform(data) {
-  return {
-    createdTime: moment().toDate(),
-    bank: 'AMEX',
-    date: moment(data[0], 'DD/MM/YYYY').toDate().getTime(),
-    description: data[3].replace(/\s{2,}/g, ' '),
-    amount: parseFloat(data[2])
   };
 }

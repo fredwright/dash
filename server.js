@@ -7,7 +7,6 @@
 
 var config = require('./server/config/config'),
     mongo = require('./server/config/mongo'),
-    mongoSeed = require('./server/config/mongo-seed'),
     koaConfig = require('./server/config/koa'),
     co = require('co'),
     koa = require('koa'),
@@ -18,7 +17,6 @@ module.exports = app;
 app.init = co(function *() {
   // mongo
   yield mongo.connect();
-  yield mongoSeed();
 
   // koa
   koaConfig(app);

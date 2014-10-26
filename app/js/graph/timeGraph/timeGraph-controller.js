@@ -1,11 +1,11 @@
-angular.module('app.dash').controller('TimeGraphCtrl', function($scope, TimeGraphService){
+angular.module('app.graph').controller('TimeGraphCtrl', function($scope, GraphService){
 
   // DATA
 
-  TimeGraphService.getIncoming().success(function(data) {
+  GraphService.getIncomingTimeData().success(function(data) {
     $scope.incomingData = data;
   });
-  TimeGraphService.getOutgoing().success(function(data) {
+  GraphService.getOutgoingTimeData().success(function(data) {
     $scope.outgoingData = data;
   });
     

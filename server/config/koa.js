@@ -16,7 +16,7 @@ module.exports = function (app) {
   }
 
   // serve the angular static files from the /client directory
-  var sendOpts = {root: 'client', maxage: config.app.cacheTime};
+  var sendOpts = {root: 'app', maxage: config.app.cacheTime};
   app.use(function *(next) {
     // skip any route that starts with /api as it doesn't have any static files
     if (this.path.substr(0, 5).toLowerCase() === '/api/') {
