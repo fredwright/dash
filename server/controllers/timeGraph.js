@@ -1,0 +1,69 @@
+'use strict';
+
+var route = require('koa-route'),
+    parse = require('co-body'),
+    _ = require('lodash'),
+    dataService = require('../services/data-service'),
+    utils = require('../services/utils-service');
+
+// ROUTES
+
+exports.init = function (app) {
+  app.use(route.get('/api/graph/time/outgoing', dataOutgoing));
+  app.use(route.get('/api/graph/time/incoming', dataIncoming));
+};
+
+// ROUTE FUNCTIONS
+
+function *dataOutgoing() {
+  // get data
+  var data = yield dataService.getData();
+
+  // transform entries and categories
+  this.body = dataTransform(data, data);
+}
+
+function *dataIncoming() {
+  // get data
+  var data = yield dataService.getData();
+
+  // transform entries and categories
+  this.body = dataTransform(data, data);
+}
+
+// FUNCTIONS
+
+function dataTransform(entries, categories) {
+  // group amounts for each category by date
+  var amountsByDate = {};
+  _.each(entries, function(entry) {
+    var date = entry.date;
+    var amount = entry.amount;
+
+    // add to an array with category as index
+    if (!amountsByDate[date]) amountsByDate[date] = [];
+    var index = _.findIndex(categories, function(category){
+      return category._id.toString() == entry.categoryId;
+    });
+    var current = amountsByDate[date][index] || 0;
+    amountsByDate[date][index] = current + amount;
+  });
+
+  // put x,y coordinates in a 'value' array with category as 'key'
+  var data = _.map(categories, function(category, i) {
+    var dataForCategory = [];
+    for (var date in amountsByDate) {
+      var amount = amountsByDate[date][i] || 0;
+      dataForCategory.push([parseInt(date), amount]);
+    }
+
+    return{
+      "key": category.description,
+      "values": dataForCategory
+    };
+  });
+
+  // console.log('time = ');
+  // console.log(data);
+  return data;
+}
