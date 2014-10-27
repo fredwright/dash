@@ -5,7 +5,7 @@ var route = require('koa-route'),
     fs = require('fs'),
     csv = require('fast-csv'),
     dataService = require('../services/data-service'),
-    utils = require('../services/utils-service');
+    U = require('../services/utils');
 
 // ROUTES
 
@@ -24,14 +24,11 @@ function *uploadCsv(filename) {
   yield dataService.createData(data);
   console.log(data.length + ' records added');
   
-  // return
   this.status = 200;
 }
 
 function *clearData() {
   yield dataService.deleteData();
-  
-  // return
   this.status = 200;
 }
 
@@ -39,7 +36,7 @@ function *clearData() {
 
 function parseCsv(filename) {
   return function(callback) {
-    // get test file
+    // upload file
     var stream = fs.createReadStream("csv/"+filename+".csv");
     var data = [];
     csv
@@ -47,7 +44,7 @@ function parseCsv(filename) {
       .on("record", function(newData){
 
         // transform data
-        data.push(utils.transformRaw(newData));
+        data.push(U.transformRaw(newData));
       })
       .on("end", function(){
         callback(/* error: */ null, data);
